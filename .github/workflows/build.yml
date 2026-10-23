@@ -27,30 +27,31 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Check project files
         run: |
-          echo "Checking Android project..."
+          echo "Checking project files..."
           ls -la
           test -f settings.gradle
+          test -f build.gradle
           test -f app/build.gradle
-          test -d app/src/main
+          test -f app/src/main/AndroidManifest.xml
 
-      - name: Build debug APK
+      - name: Check Gradle Wrapper
         run: |
-          if [ -f ./gradlew ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleDebug --no-daemon
-          else
-            echo "ERROR: gradlew is missing from the project root."
-            echo "The Android Gradle Wrapper must be added before building."
+          if [ ! -f gradlew ]; then
+            echo "ERROR: gradlew is missing from the repository root."
+            echo "The Gradle Wrapper must be added before building."
             exit 1
           fi
+          chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
         if: success()
